@@ -20,7 +20,7 @@ var userRoutes = []Route{
 	},
 	{
 		URI:          "/users/{userId}",
-		Method:       http.MethodPut,
+		Method:       http.MethodGet,
 		Function:     controllers.GetOneUser,
 		AuthRequired: false,
 	},
@@ -32,7 +32,7 @@ var userRoutes = []Route{
 	},
 	{
 		URI:          "/users/{userId}",
-		Method:       http.MethodGet,
+		Method:       http.MethodPut,
 		Function:     controllers.UpdateUser,
 		AuthRequired: false,
 	},
