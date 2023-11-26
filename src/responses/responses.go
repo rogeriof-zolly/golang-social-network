@@ -1,0 +1,32 @@
+package responses
+
+import (
+	"encoding/json"
+	"log"
+	"net/http"
+)
+
+// JSON returns a Json response to the request
+func JSON(w http.ResponseWriter, statusCode int, data interface{}) {
+	w.WriteHeader(statusCode)
+
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// Err return an error formatted in JSON
+func Err(w http.ResponseWriter, statusCode int, errors []error) {
+	errorArray := []string{}
+	for _, err := range errors {
+		errorArray = append(errorArray, err.Error())
+	}
+
+	errorsBody := struct {
+		Error []string `json:"error"`
+	}{
+		Error: errorArray,
+	}
+
+	JSON(w, statusCode, errorsBody)
+}
