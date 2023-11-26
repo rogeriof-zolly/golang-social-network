@@ -3,6 +3,8 @@ package repositories
 import (
 	"database/sql"
 	"devbook/src/models"
+	"fmt"
+	"strings"
 )
 
 type Users struct {
@@ -33,4 +35,43 @@ func (repository Users) Create(user models.User) (uint64, error) {
 	}
 
 	return uint64(lastId), nil
+}
+
+// Read returns an array of users
+// The search parameter receives a query that searches for
+// users with that given name or nickname
+func (repository Users) Read(search string) ([]models.User, error) {
+	query := fmt.Sprintf("%%%s%%", strings.TrimSpace(search)) // This equals to '%nameOrNick%'
+
+	if search == "" {
+		return []models.User{}, nil
+	}
+
+	rows, err := repository.db.Query("select ID, name, nickname, email, created_at from users where name like ? or nickname like ?", query, query)
+	if err != nil {
+		return []models.User{}, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+
+	for rows.Next() {
+		var user models.User
+
+		err := rows.Scan(
+			&user.ID,
+			&user.Name,
+			&user.Email,
+			&user.Nickname,
+			&user.CreatedAt,
+		)
+
+		if err != nil {
+			return []models.User{}, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
