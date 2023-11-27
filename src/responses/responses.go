@@ -11,6 +11,12 @@ func JSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 
+	// No need to return an empty body
+	// Status' such as No Content won't allow to return a body
+	if data == nil {
+		return
+	}
+
 	if err := json.NewEncoder(w).Encode(data); err != nil {
 		log.Fatal(err)
 	}

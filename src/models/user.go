@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -16,8 +17,8 @@ type User struct {
 	CreatedAt time.Time `json:"createdAt,omitempty"`
 }
 
-func (user *User) Prepare() []error {
-	if err := user.validate(); err != nil {
+func (user *User) Prepare(httpMethod string) []error {
+	if err := user.validate(httpMethod); err != nil {
 		return err
 	}
 
@@ -25,7 +26,7 @@ func (user *User) Prepare() []error {
 	return nil
 }
 
-func (user *User) validate() []error {
+func (user *User) validate(httpMethod string) []error {
 	errorArray := []error{}
 
 	if user.Name == "" {
@@ -40,7 +41,7 @@ func (user *User) validate() []error {
 		errorArray = append(errorArray, errors.New("email should not be empty"))
 	}
 
-	if user.Password == "" {
+	if httpMethod == http.MethodPost && user.Password == "" {
 		errorArray = append(errorArray, errors.New("password should not be empty"))
 	}
 

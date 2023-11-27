@@ -75,3 +75,36 @@ func (repository Users) Read(search string) ([]models.User, error) {
 
 	return users, nil
 }
+
+func (repository Users) ReadByID(userID uint64) (models.User, error) {
+	row := repository.db.QueryRow("select ID, name, nickname, email, created_at from users where ID = ?", userID)
+
+	var user models.User
+
+	if err := row.Scan(
+		&user.ID,
+		&user.Name,
+		&user.Nickname,
+		&user.Email,
+		&user.CreatedAt,
+	); err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
+func (repository Users) Update(userID uint64, userData models.User) error {
+	statement, err := repository.db.Prepare("update users set name = ?, nickname = ?, email = ? where ID = ?")
+	if err != nil {
+		return err
+	}
+
+	defer statement.Close()
+
+	if _, err := statement.Exec(userData.Name, userData.Nickname, userData.Email, userID); err != nil {
+		return err
+	}
+
+	return nil
+}
