@@ -145,5 +145,25 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 // GetOneUser removes one users from the database by ID
 func DeleteUser(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Deleting one user"))
+	params := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(params["userId"], 10, 64)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Err(w, http.StatusInternalServerError, []error{err})
+	}
+	defer db.Close()
+
+	userRepository := repositories.NewUsersRepository(db)
+	err = userRepository.Delete(userID)
+
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+	}
+
+	responses.JSON(w, http.StatusOK, nil)
 }
