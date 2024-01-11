@@ -1,10 +1,13 @@
 package models
 
 import (
+	"devbook/src/security"
 	"errors"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/badoux/checkmail"
 )
 
 // User is the database model for a user
@@ -22,7 +25,10 @@ func (user *User) Prepare(httpMethod string) []error {
 		return err
 	}
 
-	user.format()
+	if err := user.format(httpMethod); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -41,6 +47,10 @@ func (user *User) validate(httpMethod string) []error {
 		errorArray = append(errorArray, errors.New("email should not be empty"))
 	}
 
+	if err := checkmail.ValidateFormat(user.Email); err != nil {
+		errorArray = append(errorArray, errors.New("Invalid e-mail address"))
+	}
+
 	if httpMethod == http.MethodPost && user.Password == "" {
 		errorArray = append(errorArray, errors.New("password should not be empty"))
 	}
@@ -52,8 +62,18 @@ func (user *User) validate(httpMethod string) []error {
 	return nil
 }
 
-func (user *User) format() {
+func (user *User) format(httpMethod string) []error {
 	user.Name = strings.TrimSpace(user.Name)
 	user.Nickname = strings.TrimSpace(user.Nickname)
 	user.Email = strings.TrimSpace(user.Email)
+
+	if httpMethod == http.MethodPost {
+		hashedPassword, err := security.Hash(user.Password)
+		if err != nil {
+			return []error{err}
+		}
+		user.Password = string(hashedPassword)
+	}
+
+	return nil
 }
