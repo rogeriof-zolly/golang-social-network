@@ -94,6 +94,19 @@ func (repository Users) ReadByID(userID uint64) (models.User, error) {
 	return user, nil
 }
 
+func (repository Users) ReadByEmail(userEmail string) (models.User, error) {
+	row := repository.db.QueryRow("Select id, password from users where email = ?", userEmail)
+
+	var user models.User
+
+	err := row.Scan(&user.ID, &user.Password)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return user, nil
+}
+
 func (repository Users) Update(userID uint64, userData models.User) error {
 	statement, err := repository.db.Prepare("update users set name = ?, nickname = ?, email = ? where ID = ?")
 	if err != nil {
