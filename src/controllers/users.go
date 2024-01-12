@@ -6,7 +6,7 @@ import (
 	"devbook/src/repositories"
 	"devbook/src/responses"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -15,7 +15,7 @@ import (
 
 // CreateUser creates a new user in the database
 func CreateUser(w http.ResponseWriter, r *http.Request) {
-	requestBody, err := ioutil.ReadAll(r.Body)
+	requestBody, err := io.ReadAll(r.Body)
 
 	if err != nil {
 		responses.Err(w, http.StatusUnprocessableEntity, []error{err})
@@ -108,7 +108,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestBody, err := ioutil.ReadAll(r.Body)
+	requestBody, err := io.ReadAll(r.Body)
 
 	if err != nil {
 		responses.Err(w, http.StatusUnprocessableEntity, []error{err})
