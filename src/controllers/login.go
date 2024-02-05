@@ -1,11 +1,14 @@
 package controllers
 
 import (
+	"devbook/src/authentication"
 	"devbook/src/database"
 	"devbook/src/models"
 	"devbook/src/repositories"
 	"devbook/src/responses"
+	"devbook/src/security"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 )
@@ -35,4 +38,16 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		responses.Err(w, http.StatusBadRequest, []error{err})
 	}
 
+	if err = security.ValidatePassword(userInDatabase.Password, user.Password); err != nil {
+		responses.Err(w, http.StatusUnauthorized, []error{err})
+		return
+	}
+
+	token, err := authentication.CreateToken(userInDatabase.ID)
+
+	if err != nil {
+		responses.Err(w, http.StatusForbidden, []error{err})
+	}
+
+	fmt.Println(token)
 }
