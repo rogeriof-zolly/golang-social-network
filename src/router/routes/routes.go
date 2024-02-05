@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"devbook/src/middleware"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -19,7 +20,16 @@ func SetUp(r *mux.Router) *mux.Router {
 	routes = append(routes, LoginRoute)
 
 	for _, route := range routes {
-		r.HandleFunc(route.URI, route.Function).Methods(route.Method)
+		if route.AuthRequired {
+			// Defines the function with auth in a variable to make it readable
+			authenticatedFunc := middleware.Authenticate(route.Function)
+
+			r.HandleFunc(route.URI, middleware.Logger(authenticatedFunc)).
+				Methods(route.Method)
+		} else {
+			r.HandleFunc(route.URI, middleware.Logger(route.Function)).
+				Methods(route.Method)
+		}
 	}
 
 	return r
