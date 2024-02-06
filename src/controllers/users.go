@@ -1,11 +1,13 @@
 package controllers
 
 import (
+	"devbook/src/authentication"
 	"devbook/src/database"
 	"devbook/src/models"
 	"devbook/src/repositories"
 	"devbook/src/responses"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"strconv"
@@ -108,6 +110,18 @@ func UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userIdFromToken, err := authentication.ExtractUserIdFromToken(r)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	if userIdFromToken != userID {
+		cannotUpdateError := errors.New("cannot update a user that is not yours")
+		responses.Err(w, http.StatusForbidden, []error{cannotUpdateError})
+		return
+	}
+
 	requestBody, err := io.ReadAll(r.Body)
 
 	if err != nil {
@@ -150,6 +164,19 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	userID, err := strconv.ParseUint(params["userId"], 10, 64)
 	if err != nil {
 		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	userIdFromToken, err := authentication.ExtractUserIdFromToken(r)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	if userIdFromToken != userID {
+		cannotDeleteUser := errors.New("cannot delete a user that is not yours")
+		responses.Err(w, http.StatusForbidden, []error{cannotDeleteUser})
+		return
 	}
 
 	db, err := database.Connect()
