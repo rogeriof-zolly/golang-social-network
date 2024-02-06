@@ -40,6 +40,7 @@ func (repository Users) Create(user models.User) (uint64, error) {
 // Read returns an array of users
 // The search parameter receives a query that searches for
 // users with that given name or nickname
+// search param comes from the query string param: 'user'
 func (repository Users) Read(search string) ([]models.User, error) {
 	query := fmt.Sprintf("%%%s%%", strings.TrimSpace(search)) // This equals to '%nameOrNick%'
 
@@ -47,7 +48,11 @@ func (repository Users) Read(search string) ([]models.User, error) {
 		return []models.User{}, nil
 	}
 
-	rows, err := repository.db.Query("select ID, name, nickname, email, created_at from users where name like ? or nickname like ?", query, query)
+	rows, err := repository.db.Query(
+		`select ID, name, nickname, email, created_at 
+    from users 
+    where name like ? or nickname like ?`,
+		query, query)
 	if err != nil {
 		return []models.User{}, err
 	}

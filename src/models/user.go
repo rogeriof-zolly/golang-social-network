@@ -48,7 +48,7 @@ func (user *User) validate(httpMethod string) []error {
 	}
 
 	if err := checkmail.ValidateFormat(user.Email); err != nil {
-		errorArray = append(errorArray, errors.New("Invalid e-mail address"))
+		errorArray = append(errorArray, errors.New("invalid e-mail address"))
 	}
 
 	if httpMethod == http.MethodPost && user.Password == "" {

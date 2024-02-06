@@ -8,7 +8,6 @@ import (
 	"devbook/src/responses"
 	"devbook/src/security"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 )
@@ -49,5 +48,5 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		responses.Err(w, http.StatusForbidden, []error{err})
 	}
 
-	fmt.Println(token)
+	responses.JSON(w, http.StatusOK, models.Login{AccessToken: token})
 }
