@@ -1,0 +1,73 @@
+package controllers
+
+import (
+	"devbook/src/authentication"
+	"devbook/src/database"
+	"devbook/src/repositories"
+	"devbook/src/responses"
+	"errors"
+	"fmt"
+	"net/http"
+	"strconv"
+
+	"github.com/gorilla/mux"
+)
+
+// Gets all followers from a given user
+func RetrieveAllFollowers(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	userID, err := strconv.ParseUint(params["userId"], 10, 64)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	fmt.Println(userID)
+}
+
+// Follow a User
+func FollowUser(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	userID, err := strconv.ParseUint(params["userId"], 10, 64)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	userIdFromToken, err := authentication.ExtractUserIdFromToken(r)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	if userIdFromToken == userID {
+		cannotFollowYourself := errors.New("you cannot follow yourself")
+		responses.Err(w, http.StatusBadRequest, []error{cannotFollowYourself})
+		return
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+	defer db.Close()
+
+	usersRepository := repositories.NewUsersRepository(db)
+
+	userToFollow, err := usersRepository.ReadByID(userID)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	followersRepository := repositories.NewFollowersRepository(db)
+
+	err = followersRepository.FollowUser(userIdFromToken, userToFollow.ID)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	responses.JSON(w, http.StatusNoContent, nil)
+}
