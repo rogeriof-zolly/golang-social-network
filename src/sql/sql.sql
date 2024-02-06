@@ -11,3 +11,17 @@ CREATE TABLE users(
   password varchar(100) not null,
   createdAt timestamp default current_timestamp()
 )
+
+CREATE TABLE followers(
+  user_id int not null,
+  foreign key user_id
+  references users(id)
+  on delete cascade,
+
+  follower_id int not null,
+  foreign key follower_id
+  references users(id)
+  on delete cascade,
+
+  primary key (user_id, follower_id)
+) ENGINE=INNODB
