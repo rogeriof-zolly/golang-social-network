@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"database/sql"
 	"devbook/src/authentication"
 	"devbook/src/database"
 	"devbook/src/repositories"
@@ -57,6 +58,9 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 	userToFollow, err := usersRepository.ReadByID(userID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			err = errors.New("user to follow does not exist")
+		}
 		responses.Err(w, http.StatusBadRequest, []error{err})
 		return
 	}
@@ -65,6 +69,57 @@ func FollowUser(w http.ResponseWriter, r *http.Request) {
 
 	err = followersRepository.FollowUser(userIdFromToken, userToFollow.ID)
 	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	responses.JSON(w, http.StatusNoContent, nil)
+}
+
+func UnfollowUser(w http.ResponseWriter, r *http.Request) {
+	parameters := mux.Vars(r)
+
+	userID, err := strconv.ParseUint(parameters["userId"], 10, 64)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	userIDFromToken, err := authentication.ExtractUserIdFromToken(r)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	if userIDFromToken == userID {
+		cannotUnfollowYourself := errors.New("cannot unfollow yourself")
+		responses.Err(w, http.StatusBadRequest, []error{cannotUnfollowYourself})
+		return
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+	defer db.Close()
+
+	userRepository := repositories.NewUsersRepository(db)
+
+	userToUnfollow, err := userRepository.ReadByID(userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = errors.New("user to unfollow does not exist")
+		}
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	followersRepository := repositories.NewFollowersRepository(db)
+
+	if err = followersRepository.UnfollowUser(
+		userIDFromToken, userToUnfollow.ID,
+	); err != nil {
 		responses.Err(w, http.StatusBadRequest, []error{err})
 		return
 	}

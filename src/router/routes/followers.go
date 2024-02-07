@@ -18,4 +18,10 @@ var FollowersRoutes = []Route{
 		Function:     controllers.FollowUser,
 		AuthRequired: true,
 	},
+	{
+		URI:          "/followers/unfollow/{userId}",
+		Method:       http.MethodDelete,
+		Function:     controllers.UnfollowUser,
+		AuthRequired: true,
+	},
 }
