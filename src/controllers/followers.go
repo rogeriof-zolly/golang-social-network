@@ -38,6 +38,30 @@ func RetrieveAllFollowers(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, followers)
 }
 
+func RetrieveUsersFollowing(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	userID, err := strconv.ParseUint(params["userId"], 10, 64)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	db, err := database.Connect()
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	followersRepository := repositories.NewFollowersRepository(db)
+
+	following, err := followersRepository.GetFollowing(userID)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+	}
+
+	responses.JSON(w, http.StatusOK, following)
+}
+
 // Follow a User
 func FollowUser(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)

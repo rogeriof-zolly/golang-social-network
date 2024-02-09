@@ -88,3 +88,40 @@ func (repository Followers) GetAllFollowers(userID uint64) (models.Followers, er
 
 	return followers, nil
 }
+
+func (repository Followers) GetFollowing(userID uint64) (models.Followers, error) {
+	followingQuery := fmt.Sprintf(
+		`select u.ID, u.name, u.nickname, u.created_at
+    from users u 
+    inner join followers f on u.id = f.user_id
+    where f.follower_id = %d`, userID,
+	)
+
+	rows, err := repository.db.Query(followingQuery)
+	if err != nil {
+		return models.Followers{}, err
+	}
+	defer rows.Close()
+
+	var followers models.Followers
+	var follower models.User
+
+	for rows.Next() {
+		follower = models.User{}
+
+		err := rows.Scan(
+			&follower.ID,
+			&follower.Name,
+			&follower.Nickname,
+			&follower.CreatedAt,
+		)
+		if err != nil {
+			return models.Followers{}, err
+		}
+
+		followers.Followers = append(followers.Followers, follower)
+		followers.FollowerCount = followers.FollowerCount + 1
+	}
+
+	return followers, nil
+}
