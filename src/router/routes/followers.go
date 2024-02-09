@@ -10,7 +10,7 @@ var FollowersRoutes = []Route{
 		URI:          "/followers/all/{userId}",
 		Method:       http.MethodGet,
 		Function:     controllers.RetrieveAllFollowers,
-		AuthRequired: false,
+		AuthRequired: true,
 	},
 	{
 		URI:          "/followers/follow/{userId}",

@@ -7,7 +7,6 @@ import (
 	"devbook/src/repositories"
 	"devbook/src/responses"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -23,7 +22,20 @@ func RetrieveAllFollowers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(userID)
+	db, err := database.Connect()
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+		return
+	}
+
+	followersRepository := repositories.NewFollowersRepository(db)
+
+	followers, err := followersRepository.GetAllFollowers(userID)
+	if err != nil {
+		responses.Err(w, http.StatusBadRequest, []error{err})
+	}
+
+	responses.JSON(w, http.StatusOK, followers)
 }
 
 // Follow a User

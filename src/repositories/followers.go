@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"database/sql"
+	"devbook/src/models"
+	"fmt"
 )
 
 type Followers struct {
@@ -48,4 +50,41 @@ func (respository Followers) UnfollowUser(
 	}
 
 	return nil
+}
+
+func (repository Followers) GetAllFollowers(userID uint64) (models.Followers, error) {
+	followersQuery := fmt.Sprintf(
+		`select u.ID, u.name, u.nickname, u.created_at
+    from users u 
+    inner join followers f on u.id = f.follower_id
+    where f.user_id = %d`, userID,
+	)
+
+	rows, err := repository.db.Query(followersQuery)
+	if err != nil {
+		return models.Followers{}, err
+	}
+	defer rows.Close()
+
+	var followers models.Followers
+	var follower models.User
+
+	for rows.Next() {
+		follower = models.User{}
+
+		err := rows.Scan(
+			&follower.ID,
+			&follower.Name,
+			&follower.Nickname,
+			&follower.CreatedAt,
+		)
+		if err != nil {
+			return models.Followers{}, err
+		}
+
+		followers.Followers = append(followers.Followers, follower)
+		followers.FollowerCount = followers.FollowerCount + 1
+	}
+
+	return followers, nil
 }
