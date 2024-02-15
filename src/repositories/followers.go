@@ -3,7 +3,6 @@ package repositories
 import (
 	"database/sql"
 	"devbook/src/models"
-	"fmt"
 )
 
 type Followers struct {
@@ -53,14 +52,12 @@ func (respository Followers) UnfollowUser(
 }
 
 func (repository Followers) GetAllFollowers(userID uint64) (models.Followers, error) {
-	followersQuery := fmt.Sprintf(
-		`select u.ID, u.name, u.nickname, u.created_at
-    from users u 
-    inner join followers f on u.id = f.follower_id
-    where f.user_id = %d`, userID,
+	rows, err := repository.db.Query(`
+		select u.ID, u.name, u.nickname, u.created_at
+		from users u 
+		inner join followers f on u.id = f.follower_id
+		where f.user_id = ?`, userID,
 	)
-
-	rows, err := repository.db.Query(followersQuery)
 	if err != nil {
 		return models.Followers{}, err
 	}
@@ -90,14 +87,12 @@ func (repository Followers) GetAllFollowers(userID uint64) (models.Followers, er
 }
 
 func (repository Followers) GetFollowing(userID uint64) (models.Followers, error) {
-	followingQuery := fmt.Sprintf(
-		`select u.ID, u.name, u.nickname, u.created_at
-    from users u 
-    inner join followers f on u.id = f.user_id
-    where f.follower_id = %d`, userID,
+	rows, err := repository.db.Query(`
+		select u.ID, u.name, u.nickname, u.created_at
+		from users u 
+		inner join followers f on u.id = f.user_id
+		where f.follower_id = ?`, userID,
 	)
-
-	rows, err := repository.db.Query(followingQuery)
 	if err != nil {
 		return models.Followers{}, err
 	}
